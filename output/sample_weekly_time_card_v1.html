@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Time Card</title>
+    <style>
+        @media print {
+            @page {
+                size: letter;
+                margin: 20mm;
+            }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+        }
+
+        #header, #footer {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            text-align: center;
+        }
+        .top-row {
+            font-size: 16px;
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        .column1 {
+            text-align: left;
+            padding-left: 10px;
+            font-weight: bold;
+        }
+
+        .input-text {
+            font-size: 11px;
+        }
+
+        .boiler-plate {
+            padding: 10px;
+            text-align: left;
+            font-size: 10px;
+        }
+
+        .invisible {
+            font-size: 10px;
+            color: transparent;
+        }
+
+        #footer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+    </div>
+    <table>
+        <tr>
+            <th colspan="2" class="top-row">WEEKLY TIME CARD</th>
+            <th colspan="8" class="top-row">HARTNELL HOMES, INC.</th>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align: left; padding-left: 10px;"><b>From:</b> 6-1-23</th>
+            <td colspan="5" style="text-align: left; padding-left: 10px;"><b>To:</b> 6-7-23</th>
+            <th colspan="3"></th>
+        </tr>
+        <tr>
+            <td colspan="7" style="text-align: left; padding-left: 10px;"><b>Employee Name:</b> John Smith</th>
+            <th colspan="3">Program</th>
+        </tr>
+        <tr>
+            <td colspan="7" style="text-align: left; padding-left: 10px;"><b>Position:</b> DSP</th>
+            <th colspan="3">Hartnell Home One</th>
+        </tr>
+        <tr>
+            <th rowspan="3"></th>
+            <th rowspan="3">DATES</th>
+            <th colspan="6">HOURS</th>
+            <th colspan="2"></th>
+        </tr>
+        <tr>
+            <th rowspan="2">In</th>
+            <th rowspan="2">Out</th>
+            <th rowspan="2">In</th>
+            <th rowspan="2">Out</th>
+            <th rowspan="2">In</th>
+            <th rowspan="2">Out</th>
+            <th colspan="2">SUBTOTAL HOURS</th>
+        </tr>
+        <tr>
+            <th>Regular</th>
+            <th>Office Use</th>
+        </tr>
+        <tr>
+            <td class="column1">Monday</td>
+            <td class="input-text">6-1-23</td>
+            <td class="input-text">9:00 AM</td>
+            <td class="input-text">12:00 PM</td>
+            <td class="input-text">1:00 PM</td>
+            <td class="input-text">5:00 PM</td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+            <td>8</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="column1">Tuesday</td>
+            <td class="input-text">6-2-23</td>
+            <td class="input-text">9:00 AM</td>
+            <td class="input-text">12:00 PM</td>
+            <td class="input-text">1:00 PM</td>
+            <td class="input-text">5:00 PM</td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+            <td>8</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="column1">Wednesday</td>
+            <td class="input-text">6-3-23</td>
+            <td class="input-text">9:00 AM</td>
+            <td class="input-text">12:00 PM</td>
+            <td class="input-text">1:00 PM</td>
+            <td class="input-text">5:00 PM</td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+            <td>8</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="column1">Thursday</td>
+            <td class="input-text">6-4-23</td>
+            <td class="input-text">9:00 AM</td>
+            <td class="input-text">12:00 PM</td>
+            <td class="input-text">1:00 PM</td>
+            <td class="input-text">5:00 PM</td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+            <td>8</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="column1">Frday</td>
+            <td class="input-text">6-5-23</td>
+            <td class="input-text">9:00 AM</td>
+            <td class="input-text">12:00 PM</td>
+            <td class="input-text">1:00 PM</td>
+            <td class="input-text">5:00 PM</td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+            <td>8</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="column1">Saturday</td>
+            <td class="input-text">6-6-23</td>
+            <td class="input-text">9:00 AM</td>
+            <td class="input-text">12:00 PM</td>
+            <td class="input-text">1:00 PM</td>
+            <td class="input-text">5:00 PM</td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+            <td>8</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="column1">Sunday</td>
+            <td class="input-text">6-7-23</td>
+            <td class="input-text">9:00 AM</td>
+            <td class="input-text">12:00 PM</td>
+            <td class="input-text">1:00 PM</td>
+            <td class="input-text">5:00 PM</td>
+            <td class="invisible">H:MM AM</td>
+            <td class="invisible">H:MM PM</td>
+            <td>8</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td rowspan="2" colspan="8" class="column1"><strong>EMPLOYEE SIGNATURE:</strong></td>
+            <td>40</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>TOTAL</td>
+            <td>TOTAL</td>
+        </tr>
+        <tr>
+            <td colspan="12" class="boiler-plate">
+                *Note: No Overtime Hours will be worked without the prior approval of Administrator 
+                and/or Owner/Licenses.  The times reported accurately reflect the hours I have worked.  
+                I certify under penalty of perjury the information above is true and correct to the 
+                best of my knowledge.
+            </td>
+        </tr>
+        <tr>
+            <td colspan="12" class="column1">
+                <br/><strong>FACILITY MANAGER SIGNATURE:</strong><br/><br/>
+            </td>
+        </tr>
+    </table>
+    <div id="footer">
+    </div>
+</body>
+</html>
