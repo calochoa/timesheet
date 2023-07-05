@@ -14,7 +14,10 @@ class WeeklyTimeCard(object):
     DEFAULT_DATE_FORMAT = '%m%d%y'
     NORMAL_HOURS = 40
 
+    DATE_FORMAT_OPTIONS = [DEFAULT_DATE_FORMAT, '%m/%d/%y', '%m/%d/%Y']
+
     def __init__(self, weekly_date_str, employee):
+        self.date_format = self.DEFAULT_DATE_FORMAT
         start_daily_time_card = self.__validate_weekly_date_str(weekly_date_str)
         self.weekly_date_str = weekly_date_str
         self.employee = employee
@@ -32,28 +35,53 @@ class WeeklyTimeCard(object):
         date_str_parts = weekly_date_str.split(self.DATE_SEPARATOR)
         if len(date_str_parts) != 2:
             raise Exception('start and end date must be separated by `{0}`'.format(self.DATE_SEPARATOR))
-        start_dtc = DailyTimeCard(date_str_parts[0].strip(), date_format=self.DEFAULT_DATE_FORMAT)
+        start_dtc = self.__get_dtc(date_str_parts[0])
         if start_dtc.daily_date.weekday() != 0:
             raise Exception('start date must be a Monday')
-        end_dtc = DailyTimeCard(date_str_parts[1].strip(), date_format=self.DEFAULT_DATE_FORMAT)
+        end_dtc = self.__get_dtc(date_str_parts[1])
         if end_dtc.daily_date.weekday() != 6:
             raise Exception('end date must be a Sunday')
         delta = end_dtc.daily_date - start_dtc.daily_date
         if delta.days != self.DAYS_IN_WEEK-1:
             raise Exception('weekly date string must span a single week')
         return start_dtc
+
+    def __get_dtc(self, date_str):
+        """
+        Get the DailyTimeCard for the given date string.  Attempt to use
+        different date format options, if necessary.
+        :param date_str: date string
+        :return: DailyTimeCard object
+        """
+        dtc = None
+        for date_format in self.DATE_FORMAT_OPTIONS:
+            try:
+                dtc = DailyTimeCard(date_str.strip(), date_format=date_format)
+                self.date_format = date_format
+                break
+            except Exception as e:
+                pass
+        return dtc
         
     def __init_daily_time_card_list(self, start_daily_time_card):
         daily_time_card_list = [start_daily_time_card]
         for idx in range(1, self.DAYS_IN_WEEK):
             next_date = start_daily_time_card.daily_date + timedelta(days=idx)
-            next_date_str = next_date.strftime(self.DEFAULT_DATE_FORMAT)
-            daily_time_card_list.append(DailyTimeCard(next_date_str, date_format=self.DEFAULT_DATE_FORMAT))
+            next_date_str = next_date.strftime(self.date_format)
+            daily_time_card_list.append(self.__get_dtc(next_date_str))
         return daily_time_card_list
     
-    # TODO: add function to add time increments for a specific day
-    # 1. need to find the right day in the list first, daily_time_card
-    # 2. need to call daily_time_card.add_in_out_hours(time_card_increments_str)
+    def add_time_inc(self, day_idx, time_card_increments_str):
+        """
+        Add the time increments for a specific day.
+        :param day_idx: day index
+        :param time_card_increments_str: time increments string
+        """
+        if day_idx >=0 and day_idx <7:
+            daily_time_card = self.daily_time_card_list[day_idx]
+            self.total_weekly_hours += daily_time_card.add_in_out_hours(time_card_increments_str)
+        else:
+            print('Day Index: `{0}` is out of bounds'.format(day_idx))
 
     def has_overtime_pay(self):
         """
@@ -72,7 +100,6 @@ class WeeklyTimeCard(object):
                     break
         return has_overtime_pay
     
-    # TODO: Under what other circumstances would there be even more overtime hours?
     def get_overtime_hours(self):
         """
         Get the amount of overtime hours for the weekly time card, if applicable.  
@@ -84,7 +111,6 @@ class WeeklyTimeCard(object):
         overtime_hours = 0
         for daily_time_card in self.daily_time_card_list:
             overtime_hours += daily_time_card.get_overtime_hours()
-        # TODO: verify the below logic...
         extra_hours = self.total_weekly_hours - self.NORMAL_HOURS - overtime_hours
         if extra_hours > 0:
             overtime_hours += extra_hours

@@ -2,5 +2,7 @@
 2023-06-24 - 10:45pm-12:15am (1.5 hours)
 2023-06-25 - 11:15pm-12:45am (1.5 hours)
 2023-06-26 - 10:30pm-12:30am (2 hours)
+2023-06-26 - 10:30pm-12:30am (2 hours) -> setting up git repo... disaster!
+2023-07-04 - 1:25pm-5:10pm (3.75 hours)
 
-Total Hours (so far): 6 hours
+Total Hours (so far): 11.75 hours

@@ -43,11 +43,14 @@ class TimeCardIncrements(object):
     def __calculate_time_diff(self, start_time, end_time):
         """
         Calculate the time difference in hours between the start and end time.
+        If the start time is greater than or equal to the end time, then we need to
+        add 24 hours
         :param start_time: start time
         :param end_time: end time
         :return: time difference in hours
         """
-        return (end_time - start_time).total_seconds() / self.DEFAULT_INCREMENT
+        duration = (end_time - start_time).total_seconds() / self.DEFAULT_INCREMENT
+        return duration if (self.start_time <= self.end_time) else duration + 24
     
     def get_start_end_time_str(self):
         """
@@ -71,12 +74,15 @@ def test_me(test_start_end_time_str):
 
 if __name__ == "__main__":
     print('Start Testing TimeCardIncrements...\n')
-
+    '''
     test_me(' 6aM - 7:15Pm ')
     test_me('6aM - 7am ')
     test_me(' 3pm-5:45pm')
     test_me('12pm-1:30pm')
     test_me('12am-1am')
     test_me('2pm-2:30pm')
+    test_me('11pm-12am')
+    '''
+    test_me('1:25pm-4:10pm')
 
     print('\nEnd Testing TimeCardIncrements\n')

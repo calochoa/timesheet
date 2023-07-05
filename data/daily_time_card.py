@@ -17,15 +17,16 @@ class DailyTimeCard(object):
         self.in_out_hours_list = []
         self.total_daily_hours = 0
 
-    # TODO: find out if the 24 hours shift starts and ends at 6am as opposed to 12am? If not, how does this affect overtime?
     def add_in_out_hours(self, time_card_increments_str):
         """
         Add the input time card increments string to the in/out hours list, but only retain consecutive
-        blocks of time.  Also, update the total daily hours each time.
+        blocks of time.  Also, update the total daily hours each time.  Finally, return the hours added.
         :param time_card_increments_str: time card increments string
+        :return: hours added
         """
         current_tci = TimeCardIncrements(time_card_increments_str)
-        self.total_daily_hours += current_tci.time_diff
+        hours_added = current_tci.time_diff
+        self.total_daily_hours += hours_added
         if self.in_out_hours_list:
             last_tci = self.in_out_hours_list[-1]
             if last_tci.end_time == current_tci.start_time:
@@ -35,6 +36,7 @@ class DailyTimeCard(object):
                 )
                 current_tci = TimeCardIncrements(update_tci_str)
         self.in_out_hours_list.append(current_tci)
+        return hours_added
 
     def has_overtime_pay(self):
         """
