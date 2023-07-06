@@ -76,6 +76,20 @@ class DailyTimeCard(object):
         """
         return int(hours) if isinstance(hours, float) and hours.is_integer() else hours
 
+    def get_wtc_date(self):
+        """
+        Get the date in the format for the weekly time card html file.
+        :return: weekly time card date
+        """
+        return self.daily_date.strftime(self.DEFAULT_DATE_FORMAT)
+
+    def get_wtc_day(self):
+        """
+        Get the day in the format for the weekly time card html file.
+        :return: weekly time card day
+        """
+        return self.daily_date.strftime('%A')
+
     def display_contents(self):
         print('***** Daily Time Card *****')
         print('Daily Date: {0} ({1})'.format(self.daily_date, self.daily_date.strftime('%A')))
