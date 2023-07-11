@@ -45,11 +45,21 @@ if __name__ == "__main__":
     #test_sheet_name = 'WEEK 1_COLLEGE Schedule Templat'
     #test_sheet_name = 'WEEK 2_HARTNELL Schedule Templa'
     #test_sheet_name = 'WEEK 2_COLLEGE Schedule Templat'
-    test_sheet_name = None
+    #test_sheet_name = None
 
-    test_excel_spreadsheet_filename = 'resources/Grid Sample (Color Coded).xlsx'
-    test_sheet_name = ' POSTED + 1to1 1232022-1302022'
+    #test_excel_spreadsheet_filename = 'resources/Grid Sample (Color Coded).xlsx'
+    #test_sheet_name = ' POSTED + 1to1 1232022-1302022'
     #test_sheet_name = 'REAL ABORN SCHEDULE NO 1-1s jus'
+
+
+    #test_excel_spreadsheet_filename = 'resources/Schedule Example #2.xlsx'
+    #test_sheet_name = 'WEEK 1_HARTNELL Schedule Templa'
+    #test_sheet_name = 'WEEK 1_COLLEGE Schedule Templat'
+    #test_sheet_name = 'WEEK 2_HARTNELL Schedule Templa'
+    #test_sheet_name = 'WEEK 2_COLLEGE Schedule Templat'
+
+    test_excel_spreadsheet_filename = 'resources/Schedule Example #3.xlsx'
+    test_sheet_name = 'WEEK 1_HARTNELL Schedule Templa'
     __test_me(test_excel_spreadsheet_filename, test_sheet_name)
 
     print('\nEnd Testing TimeCardGenerator\n')

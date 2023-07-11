@@ -18,7 +18,7 @@ class Timesheet(object):
         self.df = self.__get_data_frame(excel_spreadsheet_filename, sheet_name)
         col1_list = self.__get_col_values(0)
         col2_list = self.__get_col_values(1)
-        self.entity_name = self.__get_entity_name(col1_list)
+        self.entity_facility_name = self.__get_entity_facility_name(col1_list)
         self.weekly_date_str = self.__get_weekly_date_str()
         self.id_wtc_dict = self.__get_id_wtc_dict(col1_list, col2_list)
         self.tci_index_list, self.tci_str_list = self.__get_tci_data_lists(col1_list)
@@ -67,11 +67,11 @@ class Timesheet(object):
         return self.df.iloc[row_idx].tolist()
 
     @staticmethod
-    def __get_entity_name(col_list):
+    def __get_entity_facility_name(col_list):
         """
-        Get the entity name from the given column list.
+        Get the entity facility name from the given column list.
         :param col_list: column list
-        :return: entity name
+        :return: entity facility name
         """
         return col_list[0].strip() if col_list else 'No Entity Name Found'
 
@@ -105,7 +105,7 @@ class Timesheet(object):
                 if self.__is_valid_str(col2):
                     employee_id = col1.strip()
                     employee_name = col2.strip()
-                    employee = Employee(employee_id, employee_name, self.entity_name)
+                    employee = Employee(employee_id, employee_name, self.entity_facility_name)
                     id_wtc_dict[employee_id] = WeeklyTimeCard(self.weekly_date_str, employee)
             if self.__matches_text(col1, 'Staff'):
                 found_employee = True
@@ -204,7 +204,7 @@ class Timesheet(object):
 
     def display_contents(self):
         print('***** Timesheet *****')
-        print('Entity Name: {0}'.format(self.entity_name))
+        print('Entity Facility Name: {0}'.format(self.entity_facility_name))
         print('Weekly Date Str: {0}'.format(self.weekly_date_str))
 
 
