@@ -24,7 +24,7 @@ class WeeklyTimeCardTemplate(object):
                 employee.position, employee.facility_name.upper()
             ),
             hours_rows=self.__get_hours_rows(),
-            entry_rows=self.__get_entry_rows(daily_time_card_list),
+            entry_rows=self.__get_entry_rows(weekly_time_card),
             footer_rows=self.__get_footer_rows(weekly_time_card)
         )
 
@@ -56,16 +56,16 @@ class WeeklyTimeCardTemplate(object):
                 </tr>
                 <tr>
                     <td colspan="2" class="date-row"><b>From:</b> {from_date}</th>
-                    <td colspan="5" class="date-row"><b>To:</b> {to_date}</th>
-                    <th colspan="4"></th>
+                    <td colspan="4" class="date-row"><b>To:</b> {to_date}</th>
+                    <th colspan="5"></th>
                 </tr>
                 <tr>
-                    <td colspan="7" class="employee-name-row"><b>Employee Name:</b> {employee_name}</th>
-                    <th colspan="4">Program</th>
+                    <td colspan="6" class="employee-name-row"><b>Employee Name:</b> {employee_name}</th>
+                    <th colspan="5">Program</th>
                 </tr>
                 <tr>
-                    <td colspan="7" class="position-row"><b>Position:</b> {position}</th>
-                    <th colspan="4">{facility_name}</th>
+                    <td colspan="6" class="position-row"><b>Position:</b> {position}</th>
+                    <th colspan="5">{facility_name}</th>
                 </tr>'''.format(
                     entity_name=entity_name, from_date=from_date, to_date=to_date,
                     employee_name=employee_name, position=position, facility_name=facility_name
@@ -95,13 +95,26 @@ class WeeklyTimeCardTemplate(object):
                     <th class="input-text">Overtime</th>
                 </tr>'''
 
-    def __get_entry_rows(self, daily_time_card_list):
+    def __get_entry_rows(self, weekly_time_card):
+        has_weekly_overtime_pay = weekly_time_card.has_overtime_pay()
         entry_rows = ''
-        for daily_time_card in daily_time_card_list:
-            entry_rows += self.__get_day_row(daily_time_card)
+        current_total_regular_hours = 0
+        for daily_time_card in weekly_time_card.daily_time_card_list:
+            total_daily_hours = daily_time_card.total_daily_hours
+            total_overtime_hours = daily_time_card.get_overtime_hours()
+            total_regular_hours = daily_time_card.NORMAL_HOURS if total_overtime_hours else total_daily_hours
+            if has_weekly_overtime_pay and (current_total_regular_hours + total_regular_hours) > weekly_time_card.NORMAL_HOURS:
+                remaining_regular_hours = weekly_time_card.NORMAL_HOURS - current_total_regular_hours
+                total_overtime_hours += (total_regular_hours - remaining_regular_hours)
+                total_regular_hours = remaining_regular_hours
+            else:
+                current_total_regular_hours += total_regular_hours
+            entry_rows += self.__get_day_row(
+                daily_time_card, total_daily_hours, total_regular_hours, total_overtime_hours
+            )
         return entry_rows
 
-    def __get_day_row(self, daily_time_card):
+    def __get_day_row(self, daily_time_card, total_daily_hours, total_regular_hours, total_overtime_hours):
         day = daily_time_card.get_wtc_day()
         date = daily_time_card.get_wtc_date()
         in_out_hours_cols = ''
@@ -118,7 +131,6 @@ class WeeklyTimeCardTemplate(object):
                 in_out_hours_cols += '''
                 <td class="input-text"></td>
                 <td class="input-text"></td>'''
-        total_daily_hours, total_regular_hours, total_overtime_hours = self.__get_daily_hourly_totals(daily_time_card)
         return '''
             <tr>
                 <td class="column1">{day}</td>
@@ -129,25 +141,16 @@ class WeeklyTimeCardTemplate(object):
             </tr>
         '''.format(
             day=day, date=date, in_out_hours_cols=in_out_hours_cols, 
-            total_daily_hours=total_daily_hours, total_regular_hours=total_regular_hours, 
-            total_overtime_hours=total_overtime_hours
+            total_daily_hours=self.__remove_decimal_if_whole(total_daily_hours), 
+            total_regular_hours=self.__remove_decimal_if_whole(total_regular_hours) if total_regular_hours else '', 
+            total_overtime_hours=self.__remove_decimal_if_whole(total_overtime_hours) if total_overtime_hours else ''
         )
-
-    def __get_daily_hourly_totals(self, daily_time_card):
-        total_daily_hours = self.__remove_decimal_if_whole(daily_time_card.total_daily_hours)
-        total_regular_hours = daily_time_card.NORMAL_HOURS
-        total_overtime_hours = self.__remove_decimal_if_whole(daily_time_card.get_overtime_hours())
-        if total_overtime_hours == 0:
-            total_regular_hours = total_daily_hours if total_daily_hours else ''
-            total_overtime_hours = ''
-        return total_daily_hours, total_regular_hours, total_overtime_hours
 
     @staticmethod
     def __remove_decimal_if_whole(input_num):
         return int(input_num) if isinstance(input_num, float) and input_num.is_integer() else input_num
 
     def __get_footer_rows(self, weekly_time_card):
-        weekly_total_hours, weekly_regular_hours, weekly_overtime_hours = self.__get_weekly_hourly_totals(weekly_time_card)
         return '''
             <tr>
                 <td rowspan="2" colspan="8" class="column1">EMPLOYEE SIGNATURE:</td>
@@ -171,22 +174,10 @@ class WeeklyTimeCardTemplate(object):
                     <br/>FACILITY MANAGER SIGNATURE:<br/><br/>
                 </td>
             </tr>'''.format(
-                weekly_total_hours=weekly_total_hours, weekly_regular_hours=weekly_regular_hours,
-                weekly_overtime_hours=weekly_overtime_hours
+                weekly_total_hours=self.__get_display_hours(weekly_time_card.total_weekly_hours), 
+                weekly_regular_hours=self.__get_display_hours(weekly_time_card.get_regular_hours()),
+                weekly_overtime_hours=self.__get_display_hours(weekly_time_card.get_overtime_hours())
             )
-
-    def __get_weekly_hourly_totals(self, weekly_time_card):
-        total_weekly_regular_hours = 0
-        total_weekly_overtime_hours = 0
-        for daily_time_card in weekly_time_card.daily_time_card_list:
-            total_daily_hours = daily_time_card.total_daily_hours
-            total_daily_overtime_hours = daily_time_card.get_overtime_hours()
-            total_weekly_regular_hours += daily_time_card.NORMAL_HOURS if total_daily_overtime_hours \
-                else total_daily_hours
-            total_weekly_overtime_hours += total_daily_overtime_hours
-        return self.__get_display_hours(weekly_time_card.total_weekly_hours), \
-            self.__get_display_hours(total_weekly_regular_hours), \
-            self.__get_display_hours(total_weekly_overtime_hours)
 
     def __get_display_hours(self, hours):
         return self.__remove_decimal_if_whole(hours) if hours else ''

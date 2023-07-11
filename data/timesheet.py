@@ -23,6 +23,11 @@ class Timesheet(object):
         self.id_wtc_dict = self.__get_id_wtc_dict(col1_list, col2_list)
         self.tci_index_list, self.tci_str_list = self.__get_tci_data_lists(col1_list)
         self.__populate_weekly_time_cards()
+        self.employee_name_wtc_dict = self.__get_employee_name_wtc_dict()
+
+    # TODO: add docstrings for all these functions...
+    def __get_employee_name_wtc_dict(self):
+        return {wtc.employee.employee_name : wtc for wtc in self.id_wtc_dict.values()}
 
     @staticmethod
     def __get_data_frame(excel_spreadsheet_filename, sheet_name):
