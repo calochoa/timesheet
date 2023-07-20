@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Summary Hours</title>
+    <style>
+        @media print {
+            @page {
+                size: letter;
+                margin: 20mm;
+            }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            width: 760px;
+            margin: 0 auto;
+        }
+
+        #header, #footer {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            text-align: center;
+        }
+        
+        .header-row {
+            font-size: 16px;
+            text-align: left;
+            padding-left: 10px;
+        }
+        
+        .date-row {
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        .employee-name-row {
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        .position-row {
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        .column1 {
+            text-align: left;
+            padding-left: 10px;
+            font-weight: bold;
+        }
+
+        .input-text {
+            font-size: 11px;
+            width: 65px;
+        }
+
+        .boiler-plate {
+            padding: 10px;
+            text-align: left;
+            font-size: 10px;
+        }
+
+        #footer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+    </div>
+    <table>
+        <tr>
+            <th colspan="9">HARTNELL</th>
+        </tr>
+        <tr>
+            <th colspan="2">Staff</th>
+            <th colspan="2">Week 1 Hours</th>
+            <th colspan="2">Week 2 Hours</th>
+            <th colspan="3">Total Hours</th>
+        </tr>
+        <tr>
+            <th class="top-row">Letter</th>
+            <th class="top-row">Name</th>
+            <th class="top-row">Regular</th>
+            <th class="top-row">Overtime</th>
+            <th class="top-row">Regular</th>
+            <th class="top-row">Overtime</th>
+            <th class="top-row">Regular</th>
+            <th class="top-row">Overtime</th>
+            <th class="top-row">Total</th>
+        </tr>
+        <tr>
+            <td class="input-text"></td>
+            <td class="employee-name-row"></td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+            <td class="input-text"></td>
+        </tr>
+        <tr>
+            <th colspan="2" class="top-row">TOTAL</th>
+            <th class="top-row">374</th>
+            <th class="top-row">141</th>
+            <th class="top-row">363</th>
+            <th class="top-row">138</th>
+            <th class="top-row">737</th>
+            <th class="top-row">279</th>
+            <th class="top-row">1016</th>
+        </tr>
+    </table>
+    <div id="footer">
+    </div>
+</body>
+</html>

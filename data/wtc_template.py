@@ -10,7 +10,7 @@ class WeeklyTimeCardTemplate(object):
         pass
 
     # TODO: add docstrings/comments for all these functions...
-    def get_populated_template1(self, weekly_time_card):
+    def get_populated_template(self, weekly_time_card):
         template = self.__get_html_template()
         employee = weekly_time_card.employee
         daily_time_card_list = weekly_time_card.daily_time_card_list
