@@ -4,9 +4,12 @@ __email__ = "CalOchoa@gmail.com"
 import pandas as pd
 import zipfile
 import os
+import copy
 
 from timesheet import Timesheet
+from pay_period import PayPeriod
 from wtc_template import WeeklyTimeCardTemplate
+from summary_template import SummaryTemplate
 
 
 class TimeCardGenerator(object):
@@ -20,11 +23,15 @@ class TimeCardGenerator(object):
 
     def __init__(self, excel_spreadsheet_filename):
         sheet_names = self.__get_sheet_names(excel_spreadsheet_filename)
-        week_1_timesheets = self.__get_weekly_timesheets(excel_spreadsheet_filename, sheet_names, self.WEEK_1)
-        week_2_timesheets = self.__get_weekly_timesheets(excel_spreadsheet_filename, sheet_names, self.WEEK_2)
-        self.week_1_time_cards = self.__get_weekly_time_cards(week_1_timesheets)
-        self.week_2_time_cards = self.__get_weekly_time_cards(week_2_timesheets)
+        self.week_1_timesheets = self.__get_weekly_timesheets(excel_spreadsheet_filename, sheet_names, self.WEEK_1)
+        self.week_2_timesheets = self.__get_weekly_timesheets(excel_spreadsheet_filename, sheet_names, self.WEEK_2)
+        self.week_1_time_cards = self.__get_weekly_time_cards(self.week_1_timesheets)
+        self.week_2_time_cards = self.__get_weekly_time_cards(self.week_2_timesheets)
+        self.employee_name_pay_period_dict = self.__get_employee_name_pay_period_dict(
+            self.week_1_time_cards, self.week_2_time_cards
+        )
         self.wtc_template = WeeklyTimeCardTemplate()
+        self.summary_template = SummaryTemplate()
 
     @staticmethod
     def __get_sheet_names(excel_spreadsheet_filename):
@@ -68,8 +75,11 @@ class TimeCardGenerator(object):
             timesheet_2 = weekly_timesheets[1]
             employee_name_wtc_dict_1 = timesheet_1.employee_name_wtc_dict 
             employee_name_wtc_dict_2 = timesheet_2.employee_name_wtc_dict 
+            employee_name_set = set()
             # iterate over 1st timesheet and add all values while combining duplicate employees from 2nd timesheet
-            for employee_name, wtc in employee_name_wtc_dict_1.items():
+            for employee_name, original_wtc in employee_name_wtc_dict_1.items():
+                employee_name_set.add(employee_name)
+                wtc = copy.deepcopy(original_wtc)
                 wtc_2 = employee_name_wtc_dict_2.get(employee_name)
                 if wtc_2 and wtc.weekly_date_str == wtc_2.weekly_date_str:
                     wtc.employee.facility_name += ' & {0}'.format(wtc_2.employee.facility_name)
@@ -85,12 +95,13 @@ class TimeCardGenerator(object):
                             else:
                                 daily_time_card_1.in_out_hours_list = daily_time_card_2.in_out_hours_list
                     weekly_time_cards.append(wtc)
-                    del employee_name_wtc_dict_2[employee_name]
+                    #del employee_name_wtc_dict_2[employee_name]
                 else:
                     weekly_time_cards.append(wtc)
             # iterate over 2nd timesheet and add all values while ignoring duplicate employees from 1st timesheet
-            for wtc in employee_name_wtc_dict_2.values():
-                weekly_time_cards.append(wtc)
+            for employee_name, original_wtc in employee_name_wtc_dict_2.items():
+                if employee_name not in employee_name_set:
+                    weekly_time_cards.append(copy.deepcopy(original_wtc))
         else:
             weekly_time_cards = timesheet_1.id_wtc_dict.values()
         return weekly_time_cards
@@ -119,15 +130,24 @@ class TimeCardGenerator(object):
         combined_list.extend(list2[index2:])
         return combined_list
 
+    # TODO: also create summary hours html file(s), use self.week_1_timesheets and self.week_2_timesheets
     def create_html_time_cards(self):
         """
         Create the all the time cards as an html file and store them in a separate folder
         based on week.  Also, create a zip file of the final output.
         """
+        # uncomment after done with summary template
+        '''
         output_dir = 'output/time cards'
         self.__populate_html_template(self.week_1_time_cards, '{0}/{1}/'.format(output_dir, self.WEEK_1))
         self.__populate_html_template(self.week_2_time_cards, '{0}/{1}/'.format(output_dir, self.WEEK_2))
         self.create_zip_from_directory(output_dir, 'output/my_time_cards.zip')
+        '''
+
+        html_content = self.summary_template.get_populated_template(
+            self.employee_name_pay_period_dict, self.week_1_timesheets, self.week_2_timesheets
+        )
+        self.__write_html_file('output/test/yay.html', html_content)
 
     def __populate_html_template(self, week_x_time_cards, output_dir):
         """
@@ -195,6 +215,31 @@ class TimeCardGenerator(object):
                     relative_path = os.path.relpath(file_path, directory_path)
                     zipf.write(file_path, relative_path)
         print(f"Zip file '{zip_file_path}' has been created.")
+
+    def __get_employee_name_pay_period_dict(self, week_1_time_cards, week_2_time_cards):
+        """
+        Get the dictionary of employee name to PayPeriod object using the
+        week 1 time cards and week 2 time cards.
+        :param week_1_time_cards: list of week 1 WeeklyTimeCard objects
+        :param week_2_time_cards: list of week 2 WeeklyTimeCard objects
+        :return: dictionary
+        """
+        employee_name_pay_period_dict = {}
+        # populate the pay periods with the week 1 time cards
+        for wtc_1 in week_1_time_cards:
+            employee_name = wtc_1.employee.employee_name
+            pay_period = PayPeriod(employee_name, wtc_1.employee.facility_name)
+            employee_name_pay_period_dict[employee_name] = pay_period
+            pay_period.weekly_time_card_1 = wtc_1
+        # populate the pay periods with the week 2 time cards
+        for wtc_2 in week_2_time_cards:
+            employee_name = wtc_2.employee.employee_name
+            pay_period = employee_name_pay_period_dict.get(employee_name)
+            if not pay_period:
+                pay_period = PayPeriod(employee_name, wtc_2.employee.facility_name)
+                employee_name_pay_period_dict[employee_name] = pay_period
+            pay_period.weekly_time_card_2 = wtc_2
+        return employee_name_pay_period_dict
 
 
 if __name__ == "__main__":
