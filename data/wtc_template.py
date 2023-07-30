@@ -98,17 +98,10 @@ class WeeklyTimeCardTemplate(object):
     def __get_entry_rows(self, weekly_time_card):
         has_weekly_overtime_pay = weekly_time_card.has_overtime_pay()
         entry_rows = ''
-        current_total_regular_hours = 0
         for daily_time_card in weekly_time_card.daily_time_card_list:
             total_daily_hours = daily_time_card.total_daily_hours
             total_overtime_hours = daily_time_card.get_overtime_hours()
-            total_regular_hours = daily_time_card.NORMAL_HOURS if total_overtime_hours else total_daily_hours
-            if has_weekly_overtime_pay and (current_total_regular_hours + total_regular_hours) > weekly_time_card.NORMAL_HOURS:
-                remaining_regular_hours = weekly_time_card.NORMAL_HOURS - current_total_regular_hours
-                total_overtime_hours += (total_regular_hours - remaining_regular_hours)
-                total_regular_hours = remaining_regular_hours
-            else:
-                current_total_regular_hours += total_regular_hours
+            total_regular_hours = (total_daily_hours - total_overtime_hours) if total_overtime_hours else total_daily_hours
             entry_rows += self.__get_day_row(
                 daily_time_card, total_daily_hours, total_regular_hours, total_overtime_hours
             )

@@ -23,6 +23,8 @@ class WeeklyTimeCard(object):
         self.employee = employee
         self.total_weekly_hours = 0
         self.daily_time_card_list = self.__init_daily_time_card_list(start_daily_time_card)
+        self.overtime_hours = 0
+        self.extra_ot_hours = None      # due to working at different facilities
 
     def __validate_weekly_date_str(self, weekly_date_str):
         """
@@ -103,19 +105,36 @@ class WeeklyTimeCard(object):
     def get_overtime_hours(self):
         """
         Get the amount of overtime hours for the weekly time card, if applicable.  
-        Start by accumulating all the daily overtime hours.  Then, add any remaining hours
-        that extend beyond the normal hours and that were not already accounted for in the 
-        daily overttime hours.
         :return: overtime hours
         """
         overtime_hours = 0
-        for daily_time_card in self.daily_time_card_list:
-            overtime_hours += daily_time_card.get_overtime_hours()
-        extra_hours = self.total_weekly_hours - self.NORMAL_HOURS - overtime_hours
-        if extra_hours > 0:
-            overtime_hours += extra_hours
+        # check if working at multiple facilities
+        if self.extra_ot_hours:
+            overtime_hours = self.extra_ot_hours
+        else:
+            # iterate over each day and accumulate the daily overtime hours
+            # however, once we reach the weekly normal hours limit, add all the hours as overtime
+            current_weekly_hours = 0
+            weekly_overtime_enabled = False
+            for daily_time_card in self.daily_time_card_list:
+                total_daily_hours = daily_time_card.total_daily_hours
+                if weekly_overtime_enabled:
+                    if total_daily_hours:
+                        daily_time_card.set_ot_hours = total_daily_hours
+                        overtime_hours += total_daily_hours
+                else:
+                    potential_overtime_hours = (current_weekly_hours + total_daily_hours) - self.NORMAL_HOURS
+                    daily_overtime_hours = daily_time_card.get_overtime_hours()
+                    if potential_overtime_hours > 0:
+                        weekly_overtime_enabled = True
+                        overtime_hours_to_add = max(potential_overtime_hours, daily_overtime_hours)
+                        daily_time_card.set_ot_hours = overtime_hours_to_add
+                        overtime_hours += overtime_hours_to_add
+                    elif daily_overtime_hours:
+                        overtime_hours += daily_overtime_hours
+                    current_weekly_hours += total_daily_hours
         return overtime_hours
-    
+
     def get_regular_hours(self):
         """
         Get the regular hours for weekly time cards by subtracting the total weekly hours
@@ -123,7 +142,18 @@ class WeeklyTimeCard(object):
         :return: regular hours
         """
         return self.total_weekly_hours - self.get_overtime_hours()
-    
+
+    def add_extra_ot_hours(self, hours):
+        """
+        Add the input hours to the extra overtime hours.
+        :param hours: hours
+        """
+        if hours > 0:
+            if self.extra_ot_hours is None:
+                self.extra_ot_hours = hours
+            else:
+                self.extra_ot_hours += hours
+
     def display_contents(self):
         print('***** Weekly Time Card *****')
         print('Weekly Date Str: {0}'.format(self.weekly_date_str))
@@ -131,6 +161,7 @@ class WeeklyTimeCard(object):
         print('Total Weekly Hours: {0}'.format(self.total_weekly_hours))
         print('Weekly Regular Hours: {0}'.format(self.get_regular_hours()))
         print('Weekly Overtime Hours: {0}'.format(self.get_overtime_hours()))
+        print('Weekly Extra Overtime Hours: {0}'.format(self.extra_ot_hours))
         for daily_time_card in self.daily_time_card_list:
             daily_time_card.display_contents()
         print('\n')

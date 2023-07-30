@@ -77,7 +77,6 @@ class SummaryTemplate(object):
                 total_row = total_row
             )
 
-    # TODO: need to fix the facility summary hours.. needs to factor in regular/OT hours correctly if working at another facility
     def __get_facility_summary_hours_table_list(self, week_1_timesheets, week_2_timesheets):
         """
         Get the tables containining the facility summary hours for the given week 1 timesheets
@@ -214,13 +213,13 @@ class SummaryTemplate(object):
                 </tr>'''.format(
                     col_2_value = col_2_value,
                     employee_name = employee_name, 
-                    w1_reg_hours = w1_reg_hours,
-                    w1_ot_hours = w1_ot_hours,
-                    w2_reg_hours = w2_reg_hours,
-                    w2_ot_hours = w2_ot_hours,
-                    total_reg_hours = total_reg_hours,
-                    total_ot_hours = total_ot_hours,
-                    total_hours = total_hours
+                    w1_reg_hours = self.__remove_decimal_if_whole(w1_reg_hours),
+                    w1_ot_hours = self.__remove_decimal_if_whole(w1_ot_hours),
+                    w2_reg_hours = self.__remove_decimal_if_whole(w2_reg_hours),
+                    w2_ot_hours = self.__remove_decimal_if_whole(w2_ot_hours),
+                    total_reg_hours = self.__remove_decimal_if_whole(total_reg_hours),
+                    total_ot_hours = self.__remove_decimal_if_whole(total_ot_hours),
+                    total_hours = self.__remove_decimal_if_whole(total_hours)
                 )
 
     def __get_id(self, wtc):
@@ -273,13 +272,13 @@ class SummaryTemplate(object):
                     <td class="input-text">{total_ot_hours}</td>
                     <td class="input-text">{total_hours}</td>
                 </tr>'''.format(
-                    w1_reg_hours = w1_reg_hours,
-                    w1_ot_hours = w1_ot_hours,
-                    w2_reg_hours = w2_reg_hours,
-                    w2_ot_hours = w2_ot_hours,
-                    total_reg_hours = total_reg_hours,
-                    total_ot_hours = total_ot_hours,
-                    total_hours = total_hours
+                    w1_reg_hours = self.__remove_decimal_if_whole(w1_reg_hours),
+                    w1_ot_hours = self.__remove_decimal_if_whole(w1_ot_hours),
+                    w2_reg_hours = self.__remove_decimal_if_whole(w2_reg_hours),
+                    w2_ot_hours = self.__remove_decimal_if_whole(w2_ot_hours),
+                    total_reg_hours = self.__remove_decimal_if_whole(total_reg_hours),
+                    total_ot_hours = self.__remove_decimal_if_whole(total_ot_hours),
+                    total_hours = self.__remove_decimal_if_whole(total_hours)
                 )
 
     @staticmethod

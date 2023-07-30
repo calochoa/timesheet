@@ -7,6 +7,8 @@ import os
 import copy
 
 from timesheet import Timesheet
+from weekly_time_card import WeeklyTimeCard
+from daily_time_card import DailyTimeCard
 from pay_period import PayPeriod
 from wtc_template import WeeklyTimeCardTemplate
 from summary_template import SummaryTemplate
@@ -84,6 +86,7 @@ class TimeCardGenerator(object):
                 if wtc_2 and wtc.weekly_date_str == wtc_2.weekly_date_str:
                     wtc.employee.facility_name += ' & {0}'.format(wtc_2.employee.facility_name)
                     wtc.total_weekly_hours += wtc_2.total_weekly_hours
+                    self.__adjust_summary_hours_multiple_facilities(original_wtc, wtc_2)
                     for idx, daily_time_card_1 in enumerate(wtc.daily_time_card_list):
                         daily_time_card_2 = wtc_2.daily_time_card_list[idx]
                         daily_time_card_1.total_daily_hours += daily_time_card_2.total_daily_hours
@@ -105,6 +108,157 @@ class TimeCardGenerator(object):
         else:
             weekly_time_cards = timesheet_1.id_wtc_dict.values()
         return weekly_time_cards
+
+    def __adjust_summary_hours_multiple_facilities(self, wtc_1, wtc_2):
+        """
+        Correctly caclulate the summary hours for an employee who works in multiple facilities.
+        Ensure that each facility is showing the correct overtime hours as both facilities
+        need to be accounted for.
+        :param wtc_1: WeeklyTimeCard object 1
+        :param wtc_2: WeeklyTimeCard object 2
+        """
+        current_weekly_hours = 0
+        for idx, dtc_1 in enumerate(wtc_1.daily_time_card_list):
+            current_daily_hours = 0
+            dtc_2 = wtc_2.daily_time_card_list[idx]
+            total_daily_hours = dtc_1.total_daily_hours + dtc_2.total_daily_hours
+            # check if we will exceed normal weekly or daily hours
+            if self.__has_weekly_ot_hours(current_weekly_hours, total_daily_hours) \
+                    or self.__has_daily_ot_hours(current_daily_hours, total_daily_hours):
+                # accumulate overtime hours in the correct WeeklyTimeCard
+                index1 = 0
+                index2 = 0
+                list1 = dtc_1.in_out_hours_list
+                list2 = dtc_2.in_out_hours_list
+                # iterate over both lists until there are no more hours
+                while index1 < len(list1) or index2 < len(list2):
+                    # check if both lists have hours
+                    if index1 < len(list1) and index2 < len(list2):
+                        if list1[index1].start_time < list2[index2].start_time:
+                            current_weekly_hours, current_daily_hours = self.__add_extra_ot_hours(
+                                wtc_1, current_weekly_hours, current_daily_hours, list1[index1].time_diff
+                            )
+                            index1 += 1
+                        else:
+                            current_weekly_hours, current_daily_hours = self.__add_extra_ot_hours(
+                                wtc_2, current_weekly_hours, current_daily_hours, list2[index2].time_diff
+                            )
+                            index2 += 1
+                    # check if list 1 has hours
+                    elif index1 < len(list1):
+                        current_weekly_hours, current_daily_hours = self.__add_extra_ot_hours(
+                            wtc_1, current_weekly_hours, current_daily_hours, list1[index1].time_diff
+                        )
+                        index1 += 1
+                    # check if list 2 has hours
+                    else:
+                        current_weekly_hours, current_daily_hours = self.__add_extra_ot_hours(
+                            wtc_2, current_weekly_hours, current_daily_hours, list2[index2].time_diff
+                        )
+                        index2 += 1
+            else:
+                current_weekly_hours += total_daily_hours
+
+    def __has_weekly_ot_hours(self, hours_1, hours_2):
+        """
+        Check if the combined input hours exceeds the normal weekly hours, and therefore,
+        would qualify for having overtime hours.
+        :param hours1: hours 1
+        :param hours2: hours 2
+        :return: boolean status
+        """
+        return self.__has_ot_hours(hours_1, hours_2, WeeklyTimeCard.NORMAL_HOURS)
+
+    def __has_daily_ot_hours(self, hours_1, hours_2):
+        """
+        Check if the combined input hours exceeds the normal daily hours, and therefore,
+        would qualify for having overtime hours.
+        :param hours1: hours 1
+        :param hours2: hours 2
+        :return: boolean status
+        """
+        return self.__has_ot_hours(hours_1, hours_2, DailyTimeCard.NORMAL_HOURS)
+
+    @staticmethod
+    def __has_ot_hours(hours_1, hours_2, normal_hours):
+        """
+        Check if the combined input hours exceeds the normal hours, and therefore,
+        would qualify for having overtime hours.
+        :param hours1: hours 1
+        :param hours2: hours 2
+        :param normal_hours: normal hours
+        :return: boolean status
+        """
+        return hours_1 + hours_2 > normal_hours
+
+    def __add_extra_ot_hours(self, weekly_time_card, current_weekly_hours, current_daily_hours, shift_hours):
+        """
+        Add the extra overtime hours (if any) to the WeeklyTimeCard object, given the current
+        weekly hours, current daily hours, and shift hours. Afterwards, return the newly updated
+        current weekly hours and current daily hours after including the shift hours.
+        :param weekly_time_card: WeeklyTimeCard object
+        :param current_weekly_hours: current weekly hours
+        :param current_daily_hours: current daily hours
+        :param shift_hours: shift hours
+        :return: current weekly hours, current daily hours
+        """
+        extra_ot_hours = self.__get_extra_ot_hours(current_weekly_hours, current_daily_hours, shift_hours)
+        if extra_ot_hours:
+            weekly_time_card.add_extra_ot_hours(extra_ot_hours)
+        current_weekly_hours += shift_hours
+        current_daily_hours += shift_hours
+        return current_weekly_hours, current_daily_hours
+    
+    def __get_extra_ot_hours(self, current_weekly_hours, current_daily_hours, shift_hours):
+        """
+        Get the extra overtime hours based on the current weekly hours, current daily hours,
+        and input shift hours.
+        :param current_weekly_hours: current weekly hours
+        :param current_daily_hours: current daily hours
+        :param shift_hours: shift hours
+        :return: extra overtime hours
+        """
+        weekly_ot_hours = self.__get_weekly_ot_hours(current_weekly_hours, shift_hours)
+        daily_ot_hours = self.__get_daily_ot_hours(current_daily_hours, shift_hours)
+        # use maximum between weekly and daily overtime hours to avoid overlap
+        return max(weekly_ot_hours, daily_ot_hours)
+
+    def __get_weekly_ot_hours(self, current_weekly_hours, shift_hours):
+        """
+        Get the overtime hours from the combined input hours.  More specifically, get the hours
+        that exceed the normal weekly hours, after you combine the input hours.
+        :param current_weekly_hours: current weekly hours
+        :param shift_hours: shift hours
+        :return: overtime hours
+        """
+        return self.__get_ot_hours(current_weekly_hours, shift_hours, WeeklyTimeCard.NORMAL_HOURS)
+
+    def __get_daily_ot_hours(self, current_daily_hours, shift_hours):
+        """
+        Get the overtime hours from the combined input hours.  More specifically, get the hours
+        that exceed the normal daily hours, after you combine the input hours.
+        :param current_daily_hours: current daily hours
+        :param shift_hours: shift hours
+        :return: overtime hours
+        """
+        return self.__get_ot_hours(current_daily_hours, shift_hours, DailyTimeCard.NORMAL_HOURS)
+
+    @staticmethod
+    def __get_ot_hours(current_hours, shift_hours, normal_hours):
+        """
+        Get the overtime hours from the combined input hours.  More specifically, get the hours
+        that exceed the normal hours, after you combine the input hours.
+        :param current_hours: current hours
+        :param shift_hours: shift hours
+        :param normal_hours: normal hours
+        :return: overtime hours
+        """
+        ot_hours = 0
+        if current_hours > normal_hours:
+            ot_hours = shift_hours
+        else:
+            ot_hours = max(current_hours + shift_hours - normal_hours, ot_hours)
+        return ot_hours
 
     @staticmethod
     def __combine_in_out_hour_lists(list1, list2):
@@ -130,26 +284,25 @@ class TimeCardGenerator(object):
         combined_list.extend(list2[index2:])
         return combined_list
 
-    # TODO: also create summary hours html file(s), use self.week_1_timesheets and self.week_2_timesheets
     def create_html_time_cards(self):
         """
         Create the all the time cards as an html file and store them in a separate folder
         based on week.  Also, create a zip file of the final output.
         """
-        # uncomment after done with summary template
-        '''
-        output_dir = 'output/time cards'
-        self.__populate_html_template(self.week_1_time_cards, '{0}/{1}/'.format(output_dir, self.WEEK_1))
-        self.__populate_html_template(self.week_2_time_cards, '{0}/{1}/'.format(output_dir, self.WEEK_2))
-        self.create_zip_from_directory(output_dir, 'output/my_time_cards.zip')
-        '''
-
+        # create summary hours first because it will made and adjustments to the daily time cards
+        output_dir = 'output/summary + time cards/'
+        self.__create_dir_if_not_exists(output_dir)
         html_content = self.summary_template.get_populated_template(
             self.employee_name_pay_period_dict, self.week_1_timesheets, self.week_2_timesheets
         )
-        self.__write_html_file('output/test/yay.html', html_content)
+        self.__write_html_file(output_dir + 'summary_hours.html', html_content)
 
-    def __populate_html_template(self, week_x_time_cards, output_dir):
+        tc_output_dir = output_dir + 'time cards'
+        self.__populate_tc_html_template(self.week_1_time_cards, '{0}/{1}/'.format(tc_output_dir, self.WEEK_1))
+        self.__populate_tc_html_template(self.week_2_time_cards, '{0}/{1}/'.format(tc_output_dir, self.WEEK_2))
+        self.create_zip_from_directory(output_dir, 'output/summary+time_cards.zip')
+
+    def __populate_tc_html_template(self, week_x_time_cards, output_dir):
         """
         Create each time cards as an html file and store them in the given output directory. 
         More specifically, populate the html template with the data from each WeeklyTimeCard object.

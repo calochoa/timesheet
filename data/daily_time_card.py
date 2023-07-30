@@ -16,6 +16,7 @@ class DailyTimeCard(object):
         self.daily_date = datetime.strptime(daily_date_str, date_format).date()
         self.in_out_hours_list = []
         self.total_daily_hours = 0
+        self.set_ot_hours = None      # this value is set when the weekly overtime is hit
 
     def add_in_out_hours(self, time_card_increments_str):
         """
@@ -44,14 +45,19 @@ class DailyTimeCard(object):
         daily hours to the normal hours.
         :return: boolean status
         """
-        return self.total_daily_hours > self.NORMAL_HOURS
+        return self.total_daily_hours > self.NORMAL_HOURS or self.set_ot_hours is not None
     
     def get_overtime_hours(self):
         """
         Get the amount of overtime hours for the daily time card, if applicable.
         :return: overtime hours
         """
-        return self.total_daily_hours - self.NORMAL_HOURS if self.has_overtime_pay() else 0
+        overtime_hours = 0
+        if self.set_ot_hours:
+            overtime_hours = self.set_ot_hours
+        elif self.has_overtime_pay():
+            overtime_hours = self.total_daily_hours - self.NORMAL_HOURS
+        return overtime_hours
     
     def get_daily_hours_worked_str(self):
         """
@@ -96,6 +102,7 @@ class DailyTimeCard(object):
         print('Total Daily Hours: {0}'.format(self.total_daily_hours))
         print('Has Daily Overtime Pay: {0}'.format(self.has_overtime_pay()))
         print('Daily Overtime Hours: {0}'.format(self.get_overtime_hours()))
+        print('Daily Set Overtime Hours: {0}'.format(self.set_ot_hours))
         print('In Out Hours: {0}'.format([in_out_hour.get_start_end_time_str() for in_out_hour in self.in_out_hours_list]))
         print('Daily Hours Worked: {0}\n'.format(self.get_daily_hours_worked_str()))
 
